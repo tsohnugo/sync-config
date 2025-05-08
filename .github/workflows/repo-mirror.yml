@@ -20,7 +20,7 @@ jobs:
       uses: Yikun/hub-mirror-action@v1.4
       with:
         src: github/tsohnugo
-        dst: gitee/tslyy888s
+        dst: gitee/tsohnugo
         dst_key: ${{ secrets.SYNC_PRIVATE_KEY }}
         dst_token:  ${{ secrets.SYNC_TOKEN }}
         clone_style: ssh
