@@ -17,7 +17,7 @@ jobs:
     steps:
 
     - name: Mirror the gitee/tsohnugo org repos to github/tsohnugo.
-      uses: Yikun/hub-mirror-action@v1.3
+      uses: Yikun/hub-mirror-action@v1.4
       with:
         src: github/tsohnugo
         dst: gitee/tsohnugo
