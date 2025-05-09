@@ -1,5 +1,5 @@
 # Enable job 2025-05-08
-name: tsohnugo gitee repos mirror periodic job
+name: tsohnugo gitcode repos mirror periodic job
 
 on:
   pull_request:
