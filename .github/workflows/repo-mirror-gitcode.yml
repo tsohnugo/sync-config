@@ -11,18 +11,15 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Mirror the github/tsohnugo org repos to gitcode/tsohnugo.
-            uses: Yikun/hub-mirror-action@v1.4
-            with:
-              src: github/tsohnugo
-              dst: gitcode/tsohnugo
-              dst_key: ${{ secrets.GITCODE_SYNC_PRIVATE_KEY }}
-              dst_token:  ${{ secrets.GITCODE_SYNC_TOKEN }}
-              clone_style: ssh
-              force_update: true
-              debug: true
+        uses: Yikun/hub-mirror-action@v1.4
+        with:
+          src: github/tsohnugo
+          dst: gitcode/tsohnugo
+          dst_key: ${{ secrets.GITCODE_SYNC_PRIVATE_KEY }}
+          dst_token:  ${{ secrets.GITCODE_SYNC_TOKEN }}
+          clone_style: ssh
+          force_update: true
+          debug: true
