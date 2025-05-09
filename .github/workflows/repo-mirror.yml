@@ -7,7 +7,7 @@ on:
     - '.github/workflows/**'
   schedule:
     # Runs at 01:00 UTC (9:00 AM Beijing) every day
-    - cron:  '*/3 * * * *'
+    - cron:  '*/5 * * * *'
 
 jobs:
   build:
@@ -16,13 +16,23 @@ jobs:
 
     steps:
 
-    - name: Mirror the gitee/tsohnugo org repos to github/tsohnugo.
+    - name: Mirror the github/tsohnugo org repos to gitee/tsohnugo.
       uses: Yikun/hub-mirror-action@v1.4
       with:
         src: github/tsohnugo
         dst: gitee/tsohnugo
         dst_key: ${{ secrets.SYNC_PRIVATE_KEY }}
         dst_token:  ${{ secrets.SYNC_TOKEN }}
+        clone_style: ssh
+        force_update: true
+        debug: true
+    - name: Mirror the github/tsohnugo org repos to gitcode/tsohnugo.
+      uses: Yikun/hub-mirror-action@v1.4
+      with:
+        src: github/tsohnugo
+        dst: gitcode/tsohnugo
+        dst_key: ${{ secrets.GITCODE_SYNC_KEY }}
+        dst_token:  ${{ secrets.GITCODE_SYNC_TOKEN }}
         clone_style: ssh
         force_update: true
         debug: true
