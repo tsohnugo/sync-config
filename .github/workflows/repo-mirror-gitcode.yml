@@ -82,7 +82,7 @@ jobs:
           # 检查或创建 GitCode 仓库
           def check_or_create_repo(repo_name):
               # 检查仓库是否存在
-              check_url = f"https://gitcode.net/api/v4/projects/{os.environ['GITCODE_USERNAME']}%2F{repo_name}"
+              check_url = f"https://gitcode.com/api/v4/projects/users/{os.environ['GITCODE_USERNAME']}/{repo_name}"
               check_response = requests.get(check_url, headers={
                   'PRIVATE-TOKEN': os.environ['GITCODE_API_TOKEN']
               }, timeout=30)
@@ -98,7 +98,7 @@ jobs:
                   create_data = {
                       'name': repo_name,
                       'namespace_id': None,  # 使用默认命名空间
-                      'visibility': 'private'  # 可以改为 public
+                      'visibility': 'public'  # 可以改为 public
                   }
                   
                   create_response = requests.post(create_url, headers={
