@@ -1,0 +1,190 @@
+name: Sync All Repositories
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天执行一次
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sync script
+        uses: actions/checkout@v4
+        
+      - name: Setup SSH key
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.GITCODE_SYNC_PRIVATE_KEY }}
+          
+      - name: Install dependencies
+        run: pip install requests
+        
+      - name: Sync all repositories
+        env:
+          GITHUB_TOKEN: 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
+          GITCODE_API_TOKEN: ${{ secrets.GITCODE_SYNC_TOKEN }}
+          GITHUB_USERNAME: tsohnugo
+          GITCODE_USERNAME: tsohnugo
+        run: |
+          python3 << 'EOF'
+          import os
+          import requests
+          import subprocess
+          import time
+          import sys
+          
+          # 获取 GitHub 仓库列表（支持所有分页）
+          def get_all_github_repos():
+              headers = {
+                  'Authorization': f'token {os.environ["GITHUB_TOKEN"]}',
+                  'Accept': 'application/vnd.github.v3+json'
+              }
+              
+              repos = []
+              page = 1
+              total_count = 0
+              
+              print("Fetching repository list from GitHub...")
+              
+              while True:
+                  url = f'https://api.github.com/users/{os.environ["GITHUB_USERNAME"]}/repos?per_page=100&page={page}'
+                  try:
+                      response = requests.get(url, headers=headers, timeout=30)
+                      response.raise_for_status()  # 检查请求是否成功
+                  except requests.exceptions.RequestException as e:
+                      print(f"Request error on page {page}: {e}")
+                      if page > 1:  # 如果已经获取了部分页面，返回现有结果
+                          print(f"Returning {len(repos)} repositories collected so far")
+                          return repos
+                      else:
+                          print("Failed to fetch initial repository list. Exiting.")
+                          sys.exit(1)
+                          
+                  current_repos = response.json()
+                  if not current_repos:
+                      break
+                      
+                  repos.extend(current_repos)
+                  
+                  # 首次获取时显示总数
+                  if page == 1 and 'X-Total-Count' in response.headers:
+                      total_count = int(response.headers['X-Total-Count'])
+                      print(f"Found {total_count} total repositories to sync")
+                      
+                  print(f"Fetched page {page}, {len(current_repos)} repos, total so far: {len(repos)}")
+                  page += 1
+                  
+                  # 避免触发 GitHub API 速率限制
+                  time.sleep(1)
+              
+              return repos
+          
+          # 检查或创建 GitCode 仓库
+          def check_or_create_repo(repo_name):
+              # 检查仓库是否存在
+              check_url = f"https://gitcode.net/api/v4/projects/{os.environ['GITCODE_USERNAME']}%2F{repo_name}"
+              check_response = requests.get(check_url, headers={
+                  'PRIVATE-TOKEN': os.environ['GITCODE_API_TOKEN']
+              }, timeout=30)
+              
+              if check_response.status_code == 200:
+                  print(f"GitCode repo {repo_name} already exists")
+                  return True
+                  
+              elif check_response.status_code == 404:
+                  # 创建仓库
+                  print(f"Creating GitCode repo: {repo_name}")
+                  create_url = "https://gitcode.net/api/v4/projects"
+                  create_data = {
+                      'name': repo_name,
+                      'namespace_id': None,  # 使用默认命名空间
+                      'visibility': 'private'  # 可以改为 public
+                  }
+                  
+                  create_response = requests.post(create_url, headers={
+                      'PRIVATE-TOKEN': os.environ['GITCODE_API_TOKEN']
+                  }, json=create_data, timeout=30)
+                  
+                  if create_response.status_code in (200, 201):
+                      print(f"Successfully created GitCode repo: {repo_name}")
+                      # 等待仓库创建完成（某些平台需要短暂延迟）
+                      time.sleep(2)
+                      return True
+                  else:
+                      print(f"Failed to create repo: {create_response.text}")
+                      return False
+                      
+              else:
+                  print(f"Unexpected response when checking repo: {check_response.text}")
+                  return False
+          
+          # 获取所有仓库
+          repos = get_all_github_repos()
+          print(f"Total repositories to process: {len(repos)}")
+          
+          # 处理每个仓库
+          success_count = 0
+          fail_count = 0
+          
+          for i, repo in enumerate(repos, 1):
+              repo_name = repo['name']
+              repo_url = repo['ssh_url']
+              print(f"\n[{i}/{len(repos)}] Processing repository: {repo_name}")
+              
+              # 跳过镜像仓库，避免双向同步循环
+              if repo.get('mirror', False):
+                  print(f"Skipping mirror repository: {repo_name}")
+                  continue
+              
+              # 检查或创建 GitCode 仓库
+              if not check_or_create_repo(repo_name):
+                  print(f"Skipping {repo_name} due to creation failure")
+                  fail_count += 1
+                  continue
+              
+              # 克隆仓库
+              clone_cmd = f"git clone --mirror {repo_url} {repo_name}.git"
+              clone_result = subprocess.run(clone_cmd, shell=True, capture_output=True, text=True)
+              
+              if clone_result.returncode != 0:
+                  print(f"Failed to clone {repo_name}: {clone_result.stderr}")
+                  fail_count += 1
+                  continue
+              
+              os.chdir(f"{repo_name}.git")
+              
+              # 添加 GitCode 远程仓库
+              gitcode_url = f"git@gitcode.net:{os.environ['GITCODE_USERNAME']}/{repo_name}.git"
+              add_remote_cmd = f"git remote add gitcode {gitcode_url}"
+              subprocess.run(add_remote_cmd, shell=True, capture_output=True)
+              
+              # 推送至 GitCode
+              push_cmd = "git push --mirror gitcode"
+              push_result = subprocess.run(push_cmd, shell=True, capture_output=True, text=True)
+              
+              os.chdir("..")
+              
+              # 清理
+              subprocess.run(f"rm -rf {repo_name}.git", shell=True)
+              
+              if push_result.returncode != 0:
+                  print(f"Failed to push to GitCode: {push_result.stderr}")
+                  fail_count += 1
+              else:
+                  print(f"Successfully synced {repo_name}")
+                  success_count += 1
+              
+              # 避免触发 API 速率限制
+              time.sleep(2)
+          
+          print("\n===== Synchronization Summary =====")
+          print(f"Total repositories: {len(repos)}")
+          print(f"Successfully synced: {success_count}")
+          print(f"Failed: {fail_count}")
+          
+          if fail_count > 0:
+              print(f"Warning: {fail_count} repositories failed to sync. Check logs for details.")
+              sys.exit(1)  # 可选：让工作流标记为失败
+          else:
+              print("All repositories synced successfully!")
+          EOF
