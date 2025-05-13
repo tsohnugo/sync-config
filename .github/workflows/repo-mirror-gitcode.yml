@@ -21,7 +21,7 @@ jobs:
         
       - name: Sync all repositories
         env:
-          GITHUB_TOKEN: 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
+          GITHUB_TOKEN: ${{ secrets.SYNC_TOKEN_GITHUB }}
           GITCODE_API_TOKEN: ${{ secrets.GITCODE_SYNC_TOKEN }}
           GITHUB_USERNAME: tsohnugo
           GITCODE_USERNAME: tsohnugo
