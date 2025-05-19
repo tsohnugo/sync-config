@@ -97,9 +97,9 @@ jobs:
               # 尝试解析 JSON 响应
               try:
               # 打印调试信息
-                  print(f"[DEBUG] API URL: {response.url}")
-                  print(f"[DEBUG] Status Code: {response.status_code}")
-                  print(f"[DEBUG] Response Text: {response.text[:500]}...")  # 打印前500字节
+                  print(f"[DEBUG] API URL: {check_response.url}")
+                  print(f"[DEBUG] Status Code: {check_response.status_code}")
+                  print(f"[DEBUG] Response Text: {check_response.text[:500]}...")  # 打印前500字节
                   projects = check_response.json()
                    
               except json.JSONDecodeError:
