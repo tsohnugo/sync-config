@@ -89,13 +89,13 @@ jobs:
           # 检查或创建 GitCode 仓库
           def check_or_create_repo(repo_name):
               # 检查仓库是否存在
-              check_url = f"https://gitcode.com/api/v4/projects/users/{os.environ['GITCODE_USERNAME']}/{repo_name}"
-              check_response = requests.get(check_url, headers={
-                  'PRIVATE-TOKEN': os.environ['GITCODE_API_TOKEN']
-              }, timeout=30)
+              check_url = "https://gitcode.com/api/v4/projects"
+              params = {"search": repo_name, "owned": True, "per_page": 100}
+              headers = {"PRIVATE-TOKEN": os.environ["GITCODE_API_TOKEN"]}
 
               # 尝试解析 JSON 响应
               try:
+                  check_response = requests.get(check_url, headers=headers, params=params, timeout=30)
               # 打印调试信息
                   print(f"[DEBUG] API URL: {check_response.url}")
                   print(f"[DEBUG] Status Code: {check_response.status_code}")
