@@ -88,50 +88,70 @@ jobs:
           
           # 检查或创建 GitCode 仓库
           def check_or_create_repo(repo_name):
-              # 检查仓库是否存在
-              check_url = "https://gitcode.com/api/v4/projects"
-              params = {"search": repo_name, "owned": True, "per_page": 100}
-              headers = {"PRIVATE-TOKEN": os.environ["GITCODE_API_TOKEN"]}
-
-              # 尝试解析 JSON 响应
-              try:
-                  check_response = requests.get(check_url, headers=headers, params=params, timeout=30)
-              # 打印调试信息
-                  print(f"[DEBUG] API URL: {check_response.url}")
-                  print(f"[DEBUG] Status Code: {check_response.status_code}")
-                  print(f"[DEBUG] Response Text: {check_response.text[:500]}...")  # 打印前500字节
-                  projects = check_response.json()
-                   
-              except json.JSONDecodeError:
-                  print("Failed to parse API response (invalid JSON).")
-                  return False
-              
-              # 遍历所有搜索结果，检查是否有匹配的仓库
-              for project in projects:
-                  if project["name"] == repo_name:
-                      print(f"GitCode repo {repo_name} already exists")
-                      return True
-              # 创建仓库
-              print(f"Creating GitCode repo: {repo_name}")
-              create_url = "https://gitcode.com/api/v4/projects"
-              create_data = {
-                  'name': repo_name,
-                  'namespace_id': None,  # 使用默认命名空间
-                  'visibility': 'public'  # 可以改为 public
-              }
-              
-              create_response = requests.post(create_url, headers={
-                  'PRIVATE-TOKEN': os.environ['GITCODE_API_TOKEN']
-              }, json=create_data, timeout=30)
-              
-              if create_response.status_code in (200, 201):
-                  print(f"Successfully created GitCode repo: {repo_name}")
-                  # 等待仓库创建完成（某些平台需要短暂延迟）
-                  time.sleep(2)
-                  return True
-              # 未找到匹配仓库
-              print(f"Failed to create repo: {create_response.text}")
-              return False
+            # 获取当前用户信息以获取默认命名空间ID
+            user_url = "https://gitcode.com/api/v4/user"
+            headers = {"PRIVATE-TOKEN": os.environ["GITCODE_API_TOKEN"]}
+            
+            user_response = requests.get(user_url, headers=headers, timeout=30)
+            if user_response.status_code != 200:
+                print(f"[ERROR] Failed to fetch user info: {user_response.status_code}")
+                print(f"[DEBUG] Response: {user_response.text[:500]}...")
+                return False
+        
+            try:
+                user_info = user_response.json()
+                default_namespace_id = user_info["id"]
+            except json.JSONDecodeError:
+                print("[ERROR] Failed to parse user info JSON.")
+                return False
+        
+            # 检查仓库是否已存在
+            check_url = "https://gitcode.com/api/v4/projects"
+            params = {"search": repo_name, "owned": "true", "per_page": 100}
+            check_response = requests.get(check_url, headers=headers, params=params, timeout=30)
+        
+            print(f"[DEBUG] Checking if repo '{repo_name}' exists on GitCode...")
+            print(f"[DEBUG] API URL: {check_response.url}")
+            print(f"[DEBUG] Status Code: {check_response.status_code}")
+            print(f"[DEBUG] Response Text (first 500 chars): {check_response.text[:500]}...")
+        
+            if check_response.status_code != 200:
+                print(f"[ERROR] Failed to check existing repos: {check_response.status_code}")
+                return False
+        
+            try:
+                projects = check_response.json()
+            except json.JSONDecodeError:
+                print("[ERROR] Failed to parse project list JSON.")
+                return False
+        
+            # 遍历所有项目，检查是否有匹配的仓库
+            for project in projects:
+                if project["name"] == repo_name:
+                    print(f"[INFO] GitCode repo '{repo_name}' already exists.")
+                    return True
+        
+            # 创建仓库
+            print(f"[INFO] Creating GitCode repo: {repo_name}")
+            create_url = "https://gitcode.com/api/v4/projects"
+            create_data = {
+                "name": repo_name,
+                "namespace_id": default_namespace_id,
+                "visibility": "public"  # 可根据需求改为 private
+            }
+        
+            create_response = requests.post(create_url, headers=headers, json=create_data, timeout=30)
+        
+            print(f"[DEBUG] Create Repo Response Status Code: {create_response.status_code}")
+            print(f"[DEBUG] Create Repo Response Body: {create_response.text[:500]}...")
+        
+            if create_response.status_code in (200, 201):
+                print(f"[SUCCESS] GitCode repo '{repo_name}' created successfully.")
+                time.sleep(5)  # 等待仓库创建完成
+                return True
+            else:
+                print(f"[ERROR] Failed to create repo '{repo_name}': {create_response.status_code} - {create_response.text}")
+                return False
           
           # 获取所有仓库
           repos = get_all_github_repos()
