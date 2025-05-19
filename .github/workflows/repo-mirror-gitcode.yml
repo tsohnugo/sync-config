@@ -38,6 +38,7 @@ jobs:
           import subprocess
           import time
           import sys
+          import json
           
           # 获取 GitHub 仓库列表（支持所有分页）
           def get_all_github_repos():
@@ -95,7 +96,7 @@ jobs:
 
               # 尝试解析 JSON 响应
               try:
-                  projects = response.json()
+                  projects = check_response.json()
               except json.JSONDecodeError:
                   print("Failed to parse API response (invalid JSON).")
                   return False
