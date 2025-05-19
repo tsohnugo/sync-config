@@ -97,6 +97,10 @@ jobs:
               # 尝试解析 JSON 响应
               try:
                   projects = check_response.json()
+                   # 打印调试信息
+                  print(f"[DEBUG] API URL: {response.url}")
+                  print(f"[DEBUG] Status Code: {response.status_code}")
+                  print(f"[DEBUG] Response Text: {response.text[:500]}...")  # 打印前500字节
               except json.JSONDecodeError:
                   print("Failed to parse API response (invalid JSON).")
                   return False
