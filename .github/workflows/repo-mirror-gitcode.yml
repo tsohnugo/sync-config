@@ -147,6 +147,9 @@ jobs:
                   else:
                       print(f"Failed to create repo: {create_response.text}")
                       return False
+              else :
+                print(f"Failed to check repo: {response.text}")
+                return False
              
           # 获取所有仓库
           repos = get_all_github_repos()
