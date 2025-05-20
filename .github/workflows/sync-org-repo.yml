@@ -23,7 +23,12 @@ jobs:
           chmod 600 ~/.ssh/known_hosts
           
       - name: Install dependencies
-        run: pip install requests
+        run: |
+          pip install requests
+          # 安装Git LFS
+          curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+          sudo apt-get install git-lfs
+          git lfs install --skip-smudge  # 仅安装，不立即下载大文件内容
         
       - name: Sync all repositories
         env:
@@ -167,6 +172,22 @@ jobs:
               
               os.chdir(f"{repo_name}.git")
               
+              # 初始化LFS
+              subprocess.run("git lfs install", shell=True, capture_output=True)
+              
+              # 获取LFS跟踪的文件列表
+              lfs_track_result = subprocess.run("git lfs track", shell=True, capture_output=True, text=True)
+              if lfs_track_result.returncode == 0 and lfs_track_result.stdout.strip():
+                  print(f"LFS tracked files in {repo_name}:\n{lfs_track_result.stdout}")
+                  
+                  # 拉取LFS对象（可选，取决于性能需求）
+                  print(f"Fetching LFS objects for {repo_name}")
+                  fetch_lfs_cmd = "git lfs fetch --all"
+                  fetch_result = subprocess.run(fetch_lfs_cmd, shell=True, capture_output=True, text=True)
+                  if fetch_result.returncode != 0:
+                      print(f"Warning: Failed to fetch LFS objects for {repo_name}: {fetch_result.stderr}")
+                      # 继续同步，不中断整个流程
+              
               # 添加 GitCode 远程仓库
               gitcode_url = f"git@gitcode.com:{os.environ['GITCODE_USERNAME']}/{repo_name}.git"
               add_remote_cmd = f"git remote add gitcode {gitcode_url}"
@@ -175,7 +196,10 @@ jobs:
               # 推送至 GitCode
               push_cmd = "git push --mirror gitcode"
               push_result = subprocess.run(push_cmd, shell=True, capture_output=True, text=True)
-              
+
+              # 推送LFS对象
+              push_lfs_cmd = "git lfs push --all gitcode"
+              push_lfs_result = subprocess.run(push_lfs_cmd, shell=True, capture_output=True, text=True)
               os.chdir("..")
               
               # 清理
