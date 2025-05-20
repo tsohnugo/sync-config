@@ -60,7 +60,7 @@ jobs:
               print("Fetching repository list from GitHub...")
               
               while True:
-                  url = f'https://api.github.com/orgs/{os.environ["GITHUB_USERNAME"]}/repos?per_page=100&page={page}'
+                  url = f'https://api.github.com/orgs/{os.environ["GITHUB_USERNAME"]}/repos?per_page=3&page={page}'
                   try:
                       response = requests.get(url, headers=headers, timeout=30)
                       response.raise_for_status()  # 检查请求是否成功
@@ -85,7 +85,7 @@ jobs:
                       print(f"Found {total_count} total repositories to sync")
                       
                   print(f"Fetched page {page}, {len(current_repos)} repos, total so far: {len(repos)}")
-                  page += 1
+                  # page += 1
                   
                   # 避免触发 GitHub API 速率限制
                   time.sleep(1)
