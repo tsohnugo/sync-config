@@ -127,7 +127,7 @@ jobs:
               if response.status_code == 200:
                   print(f"GitCode repo {repo_name} already exists")
                   return True
-              elif response.status_code == 404:
+              elif response.status_code == 400:
                   # 创建仓库
                   print(f"Creating GitCode repo: {repo_name}")
                   create_url = "https://api.gitcode.com/api/v5/user/repos"
