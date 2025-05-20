@@ -148,10 +148,6 @@ jobs:
                       print(f"Failed to create repo: {create_response.text}")
                       return False
              
-              # 未找到匹配仓库
-              print(f"Failed to create repo: {create_response.text}")
-              return False
-          
           # 获取所有仓库
           repos = get_all_github_repos()
           print(f"Total repositories to process: {len(repos)}")
