@@ -1,4 +1,4 @@
-name: Sync All Repositories
+name: sync-org-repo
 on:
   schedule:
     - cron: '0 0 * * *'  # 每天执行一次
@@ -106,7 +106,7 @@ jobs:
                   create_url = "https://api.gitcode.com/api/v5/orgs/HuaweiCloudDeveloper/repos"
                   create_data = {
                       'name': repo_name,
-                      'public': 1
+                      'public': 1,
                       'private': 'false'  
                   }
                   create_response = requests.post(create_url, headers={
