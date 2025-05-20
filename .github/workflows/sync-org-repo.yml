@@ -122,7 +122,7 @@ jobs:
           # 获取所有仓库
           repos = get_all_github_repos()
           print(f"Total repositories to process: {len(repos)}")
-          
+          black_list = str2list(os.environ["BLACK_LIST"])
           # 处理每个仓库
           success_count = 0
           fail_count = 0
@@ -134,7 +134,7 @@ jobs:
               print(f"\n[{i}/{len(repos)}] Processing repository: {repo_name}")
 
               # 跳过black_list
-              if repo_name in str2list({os.environ["BLACK_LIST"]}):
+              if repo_name in black_list:
                   print(f"Skipping mirror repository: {repo_name}")
                   skip_count += 1
                   continue
