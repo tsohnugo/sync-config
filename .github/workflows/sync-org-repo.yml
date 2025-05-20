@@ -16,12 +16,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.GITCODE_SYNC_PRIVATE_KEY }}
           
-      - name: Add GitCode host key
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan gitcode.com >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
-          
       - name: Install dependencies
         run: pip install requests
         
