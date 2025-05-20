@@ -134,7 +134,7 @@ jobs:
               print(f"\n[{i}/{len(repos)}] Processing repository: {repo_name}")
 
               # 跳过black_list
-              if repo_name in str2list({os.environ["GITHUB_USERNAME"]}):
+              if repo_name in str2list({os.environ["BLACK_LIST"]}):
                   print(f"Skipping mirror repository: {repo_name}")
                   skip_count += 1
                   continue
