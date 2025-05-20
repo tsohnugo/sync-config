@@ -97,24 +97,24 @@ jobs:
               elif response.status_code == 400:
                   # 创建仓库
                   print(f"Creating GitCode repo: {repo_name}")
-                  # create_url = "https://api.gitcode.com/api/v5/orgs/HuaweiCloudDeveloper/repos"
-                  # create_data = {
-                  #     'name': repo_name,
-                  #     'public': 1,
-                  #     'private': 'false'  
-                  # }
-                  # create_response = requests.post(create_url, headers={
-                  #     'PRIVATE-TOKEN': os.environ['GITCODE_API_TOKEN']
-                  # }, json=create_data, timeout=30)
+                  create_url = "https://api.gitcode.com/api/v5/orgs/HuaweiCloudDeveloper/repos"
+                  create_data = {
+                      'name': repo_name,
+                      'public': 1,
+                      'private': 'false'  
+                  }
+                  create_response = requests.post(create_url, headers={
+                      'PRIVATE-TOKEN': os.environ['GITCODE_API_TOKEN']
+                  }, json=create_data, timeout=30)
                   
-                  # if create_response.status_code in (200, 201):
-                  #     print(f"Successfully created GitCode repo: {repo_name}")
-                  #     # 等待仓库创建完成（某些平台需要短暂延迟）
-                  #     time.sleep(2)
-                  #     return True
-                  # else:
-                  #     print(f"Failed to create repo: {create_response.text}")
-                  #     return False
+                  if create_response.status_code in (200, 201):
+                      print(f"Successfully created GitCode repo: {repo_name}")
+                      # 等待仓库创建完成（某些平台需要短暂延迟）
+                      time.sleep(2)
+                      return True
+                  else:
+                      print(f"Failed to create repo: {create_response.text}")
+                      return False
               else :
                 print(f"Failed to check repo: {response.text},status_code: {response.status_code} ")
                 return False
@@ -151,36 +151,36 @@ jobs:
                   continue
               
               # 克隆仓库
-              # clone_cmd = f"git clone --mirror {repo_url} {repo_name}.git"
-              # clone_result = subprocess.run(clone_cmd, shell=True, capture_output=True, text=True)
+              clone_cmd = f"git clone --mirror {repo_url} {repo_name}.git"
+              clone_result = subprocess.run(clone_cmd, shell=True, capture_output=True, text=True)
               
-              # if clone_result.returncode != 0:
-              #     print(f"Failed to clone {repo_name}: {clone_result.stderr}")
-              #     fail_count += 1
-              #     continue
+              if clone_result.returncode != 0:
+                  print(f"Failed to clone {repo_name}: {clone_result.stderr}")
+                  fail_count += 1
+                  continue
               
-              # os.chdir(f"{repo_name}.git")
+              os.chdir(f"{repo_name}.git")
               
-              # # 添加 GitCode 远程仓库
-              # gitcode_url = f"git@gitcode.com:{os.environ['GITCODE_USERNAME']}/{repo_name}.git"
-              # add_remote_cmd = f"git remote add gitcode {gitcode_url}"
-              # subprocess.run(add_remote_cmd, shell=True, capture_output=True)
+              # 添加 GitCode 远程仓库
+              gitcode_url = f"git@gitcode.com:{os.environ['GITCODE_USERNAME']}/{repo_name}.git"
+              add_remote_cmd = f"git remote add gitcode {gitcode_url}"
+              subprocess.run(add_remote_cmd, shell=True, capture_output=True)
               
-              # # 推送至 GitCode
-              # push_cmd = "git push --mirror gitcode"
-              # push_result = subprocess.run(push_cmd, shell=True, capture_output=True, text=True)
+              # 推送至 GitCode
+              push_cmd = "git push --mirror gitcode"
+              push_result = subprocess.run(push_cmd, shell=True, capture_output=True, text=True)
               
-              # os.chdir("..")
+              os.chdir("..")
               
-              # # 清理
-              # subprocess.run(f"rm -rf {repo_name}.git", shell=True)
+              # 清理
+              subprocess.run(f"rm -rf {repo_name}.git", shell=True)
               
-              # if push_result.returncode != 0:
-              #     print(f"Failed to push to GitCode: {push_result.stderr}")
-              #     fail_count += 1
-              # else:
-              #     print(f"Successfully synced {repo_name}")
-              #     success_count += 1
+              if push_result.returncode != 0:
+                  print(f"Failed to push to GitCode: {push_result.stderr}")
+                  fail_count += 1
+              else:
+                  print(f"Successfully synced {repo_name}")
+                  success_count += 1
               
               # 避免触发 API 速率限制
               time.sleep(2)
