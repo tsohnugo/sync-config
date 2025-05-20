@@ -88,20 +88,34 @@ jobs:
 
           # 获取所有 GitCode 仓库名称
           def _get_all_repo_names(page=1):
-              per_page = 3
-              url = f"https://gitcode.com/api/v4/users/{os.environ["GITHUB_USERNAME"]}/projects"
-              api = url + f"?page={page}&per_page=" + str(per_page)
+              per_page = 30  # 增加每页数量，减少请求次数
+              url = f"https://gitcode.com/api/v4/users/{os.environ['GITHUB_USERNAME']}/projects"
+              api = url + f"?page={page}&per_page={per_page}"
               headers = {"PRIVATE-TOKEN": os.environ["GITCODE_API_TOKEN"]}
-              response = requests.get(url, headers=headers, timeout=30)
-              all_items = []
-              if response.status_code != 200:
-                  print("Repo getting failed: " + response.text)
-                  return all_items
-              items = response.json()
-              if items:
-                  names = [i['name'] for i in items]
-                  return names + self._get_all_repo_names(url, page=page+1)
-              return all_items
+              
+              try:
+                  response = requests.get(api, headers=headers, timeout=30)
+                  response.raise_for_status()  # 检查HTTP状态码
+                  
+                  # 验证响应是否为有效的JSON
+                  try:
+                      items = response.json()
+                  except ValueError:
+                      print(f"Error: Invalid JSON response from API on page {page}: {response.text}")
+                      return []
+                      
+                  if not items:
+                      return []
+                      
+                  names = [item['name'] for item in items]
+                  print(f"Fetched {len(names)} repositories from page {page}")
+                  
+                  # 递归获取下一页
+                  return names + _get_all_repo_names(page + 1)
+                  
+              except requests.exceptions.RequestException as e:
+                  print(f"Request error on page {page}: {e}")
+                  return []
 
               
           # 检查或创建 GitCode 仓库
