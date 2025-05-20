@@ -92,7 +92,7 @@ jobs:
               url = f"https://gitcode.com/api/v4/users/{os.environ["GITHUB_USERNAME"]}/projects"
               api = url + f"?page={page}&per_page=" + str(per_page)
               headers = {"PRIVATE-TOKEN": os.environ["GITCODE_API_TOKEN"]}
-              response = requests.get(check_url, headers=headers, timeout=30)
+              response = requests.get(url, headers=headers, timeout=30)
               all_items = []
               if response.status_code != 200:
                   print("Repo getting failed: " + response.text)
@@ -116,7 +116,6 @@ jobs:
                     'namespace_id': None,  # 使用默认命名空间
                     'visibility': 'public'  # 可以改为 public
                 }
-                
                 create_response = requests.post(create_url, headers={
                     'PRIVATE-TOKEN': os.environ['GITCODE_API_TOKEN']
                 }, json=create_data, timeout=30)
