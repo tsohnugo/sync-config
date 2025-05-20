@@ -89,9 +89,9 @@ jobs:
           # 获取所有 GitCode 仓库名称
           def _get_all_repo_names(page=1):
               per_page = 30  # 增加每页数量，减少请求次数
-              url = f"https://gitcode.com/api/v4/users/{os.environ['GITHUB_USERNAME']}/projects"
+              url = f"https://gitcode.com/api/v5/users/repos"
               api = url + f"?page={page}&per_page={per_page}"
-              headers = {"PRIVATE-TOKEN": os.environ["GITCODE_API_TOKEN"]}
+              headers = {"access-token": os.environ["GITCODE_API_TOKEN"]}
               
               try:
                   response = requests.get(api, headers=headers, timeout=30)
